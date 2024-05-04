@@ -1,0 +1,27 @@
+---
+
+- name: NTP and ACL Show Commands
+  hosts: iosxe
+  gather_facts: false
+
+  tasks:
+
+    - name: Run show NTP associations
+      cisco.ios.ios_command:
+        commands: show ntp associations
+      register: myntp
+
+    - name: Display value of "myntp" variable
+      ansible.builtin.debug:
+        var: myntp["stdout_lines"][0]
+
+    - name: Run show ip access-lists
+      cisco.ios.ios_command:
+        commands: show ip access-lists
+      register: myacl
+
+    - name: Display value of "myacl" variable
+      ansible.builtin.debug:
+        var: myacl["stdout_lines"][0]
+
+...

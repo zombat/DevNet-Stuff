@@ -1,0 +1,27 @@
+---
+
+- name: Sample IOS playbook to Run Show Commands
+  hosts: cat8k
+  gather_facts: false
+
+  tasks:
+
+    - name: Run show ip int brief
+      cisco.ios.ios_command:
+        commands: show ip interface brief
+      register: myinterfaces
+
+    - name: Display value of "myinterfaces" variable
+      ansible.builtin.debug:
+        var: myinterfaces["stdout_lines"][0]
+
+    - name: Run show users
+      cisco.ios.ios_command:
+        commands: show users
+      register: myusers
+
+    - name: Display value of "myusers" variable
+      ansible.builtin.debug:
+        var: myusers["stdout_lines"][0]
+
+...

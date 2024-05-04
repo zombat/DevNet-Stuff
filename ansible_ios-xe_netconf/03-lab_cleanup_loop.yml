@@ -1,0 +1,16 @@
+---
+
+- name: Delete NTP servers via CLI # noqa ignore-errors
+  cisco.ios.ios_config:
+    lines:
+      - no ntp server 10.1.{{ loop_subnet_id }}.{{ item }}
+  loop:
+    - 11
+    - 12
+    - 13
+    - 14
+  ignore_errors: true
+  failed_when: false
+
+
+...

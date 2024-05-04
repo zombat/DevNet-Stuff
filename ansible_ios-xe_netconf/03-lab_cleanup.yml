@@ -1,0 +1,83 @@
+---
+
+- name: Lab Cleanup
+  hosts: iosxe
+  gather_facts: false
+
+  tasks:
+
+    - name: Subnet known block
+      when:
+        - subnet_id is defined
+        - subnet_id != "<REPLACE WITH INTEGER 0-254>"
+      block:
+
+        - name: Delete ACL via CLI # noqa ignore-errors
+          vars:
+            ansible_connection: ansible.netcommon.network_cli
+          cisco.ios.ios_config:
+            lines:
+              - no ip access-list extended my_acl
+          ignore_errors: true
+          failed_when: false
+
+        - name: Delete ntp servers via CLI {{ subnet_id }} # noqa ignore-errors
+          vars:
+            ansible_connection: ansible.netcommon.network_cli
+          cisco.ios.ios_config:
+            lines:
+              - no ntp server 10.1.{{ subnet_id }}.{{ item }}
+          loop:
+            - 11
+            - 12
+            - 13
+            - 14
+          ignore_errors: true
+          failed_when: false
+
+        - name: Delete loopback {{ subnet_id }} # noqa ignore-errors
+          vars:
+            ansible_connection: ansible.netcommon.network_cli
+          cisco.ios.ios_interfaces:
+            config:
+              name: Loopback{{ subnet_id }}
+              enabled: true
+            state: deleted
+          ignore_errors: true
+          failed_when: false
+
+    - name: Subnet not known block
+      when:
+        - subnet_id is not defined
+          or
+          subnet_id == "<REPLACE WITH INTEGER 0-254>"
+      block:
+
+        - name: Find all loopback interfaces
+          vars:
+            ansible_connection: ansible.netcommon.network_cli
+          cisco.ios.ios_facts:
+            gather_subset: interfaces
+
+        - name: Loopback and clean NTP
+          ansible.builtin.include_tasks: 03-lab_cleanup_loop.yml
+          vars:
+            ansible_connection: ansible.netcommon.network_cli
+            loop_subnet_id: "{{ item }}"
+          loop: "{{ ansible_net_interfaces.keys() | select('match', '^Loopback(\\d+)$') | map('regex_replace', '^Loopback(\\d+)$', '\\1') | list }}"
+          when:
+            - loop_subnet_id != "0"
+
+        - name: Delete all loopback interfaces except Loopback0 # noqa ignore-errors
+          vars:
+            ansible_connection: ansible.netcommon.network_cli
+          cisco.ios.ios_interfaces:
+            config:
+              name: "{{ item }}"
+              enabled: true
+            state: deleted
+          loop: "{{ ansible_net_interfaces.keys() | select('match', '^Loopback[1-255]') | list }}"
+          ignore_errors: true
+          failed_when: false
+
+...

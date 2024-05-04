@@ -1,0 +1,30 @@
+---
+- name: Create and Address Loopback Interface
+  hosts: iosxe
+  gather_facts: false
+
+  tasks:
+
+    - name: Set subnet_id from selection or random value from 1 to 255
+      ansible.builtin.set_fact:
+        subnet_id: "{{ 1 + 255 | random }}"
+      when:
+        - subnet_id is not defined
+          or
+          subnet_id == "<REPLACE WITH INTEGER 0-254>"
+
+    - name: Create loopback {{ subnet_id }}
+      cisco.ios.ios_interfaces:
+        config:
+          - name: Loopback{{ subnet_id }}
+            description: Pod Number {{ subnet_id }}
+            enabled: true
+
+    - name: Assign IP to loopback
+      cisco.ios.ios_l3_interfaces:
+        config:
+          - name: Loopback{{ subnet_id }}
+            ipv4:
+              - address: 10.111.{{ subnet_id }}.1/32
+
+...

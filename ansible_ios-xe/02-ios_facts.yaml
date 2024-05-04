@@ -1,0 +1,22 @@
+---
+
+- name: Sample IOS Playbook to Retrieve Facts
+  hosts: iosxe
+  gather_facts: false
+
+  tasks:
+
+    - name: Retrieve IOS facts
+      cisco.ios.ios_facts:
+        gather_subset:
+          - all
+
+    - name: Display version and serial number
+      ansible.builtin.debug:
+        msg: "The IOS version is: {{ ansible_net_version }} and the SN is: {{ ansible_net_serialnum }}"
+
+    - name: Print out interface information
+      ansible.builtin.debug:
+        var: ansible_net_interfaces
+
+...
